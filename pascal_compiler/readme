@@ -1,0 +1,8 @@
+Ti5216400 - Languages, Compilers and Interpreters - Pascal compiler project
+
+
+Instructions:
+==========================
+1. make
+2. ./prj example.p
+3. ./example

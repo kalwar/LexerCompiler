@@ -3,40 +3,36 @@
 
 #define TABSIZE 100 /* size of the tables */
 
-
-//Structure for numbers, varibles
-//if identifier is 0 or constant 1
+/* Data structure for variables and numbers, type contains the 
+information, if value is identifier (0) or integer constant (1). */
 typedef struct
 {
-	   // type = 0: name of variable
-	  // type = 1: integer
+	/* type = 0:represents name of the variable
+	   type = 1:represents integer number */
 	int type;
 	union
 	{
-		char *symbol; 
-		int number; 
+		char *symbol; /* Identifiers */
+		int number; /* Integer constants */
 	} argument;
 	char *strvalue;
 } argumentnode;
 
-
-//Structure needed in while loop
-//When using TAC
-
+/* Data stucture needed for while loops, which can have loops inside. This
+can be implemented easier, when using TAC */
 typedef struct 
 {
 	char *beginlabel;
 	char *endlabel;
 } labelnode;
 
-// symbol table 
-char *symtable[TABSIZE];
+char *symtable[TABSIZE];/* symbol table */
 char *repeatlabels[TABSIZE];
 char *iflabels[TABSIZE];
 char *thenlabels[TABSIZE];
 char *strings[TABSIZE];
 
-// Function declarations
+/* Function Prototypes */
 void yyerror(char *);
 int yylex(void);
 

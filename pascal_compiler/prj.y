@@ -1,38 +1,21 @@
 %{
-    /* Copyright (C) 2008 Santosh Kalwar - All Rights Reserved
-     * You may use, distribute and modify this code under the
-     * terms of the MIT license, which unfortunately won't be
-     * written for another century.
-    
-/* Credits and reference from
-*  http://www.it.lut.fi/kurssit/07-08/CT20A6400/projects.html
-*  http://www.it.lut.fi/kurssit/07-08/CT20A6400/project-english.html
-* http://www.stanford.edu/class/cs143/
-* http://www.it.lut.fi/kurssit/07-08/CT20A6400/exercises.html
-* http://www.gnu-pascal.de/gpc/index.html
-*/
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "prj.h"
 
-int error_num=0;  
+int error_num=0;  /* Number of erros */
 extern int linenumber;
 
-//String in table
-int strnumber=0; 
-//Variable for temporary
-int varnumber=0; 
-int labelnumber=0; 
-int repeat=-1;
-//Inner if clause
-int iflb=-1;
-//Inner statements
-int thenlb=-1;
-//None-0,Repeat 1,while 2 and if 3
-int addlab=0;
+int strnumber=0; /* number of strings in the table*/
+int varnumber=0; /* Variables for generating temporary variables ... */
+int labelnumber=0; /* ... and labels */
+int repeat=-1;/* shows how many inside repeat loops were created */
+int iflb=-1;/* shows how many inside if statements were created */
+int thenlb=-1;/* shows how many inside then statements were created */
+int addlab=0;/*shows which construction added last label 
+0 - nobody, 1 - repeat, 2 - while , 3 - if*/
 char* lastlabel;
 
 FILE *out;
@@ -69,7 +52,7 @@ FILE *out;
 program : head_block ';' var_block main_block '.'
 	| error {		
 		error_num++;
-		printf("error #%d line %d:Syntax Worng\n",error_num,linenumber);
+		printf("error #%d line %d:Bad program syntax\n",error_num,linenumber);
 	} 
 	;
  
@@ -109,18 +92,17 @@ statement_list1 : statement_list1 ';' statement
 	| statement	
 	| error {
 		error_num++;
-		printf("error #%d line %d:Statement Syntax not correct\n",error_num,linenumber);
+		printf("error #%d line %d:Bad statement syntax\n",error_num,linenumber);
 	}
 	;
 	
 
 
 statement :T_VARIABLE T_ASSIGN expression	{
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($3)); 
-		fprintf(out, "\tmov\t%%eax, %s\n", $1.argument.symbol);
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($3)); 
+		fprintf(out, "\tmovl\t%%eax, %s\n", $1.argument.symbol);
 
-		 //makequad(TAC_ASS, $3, -1, $1);
-                   }
+		 /*makequad(TAC_ASS, $3, -1, $1);*/}
 	| repeat_st 
 	| while_st 
 	| if_st 
@@ -191,47 +173,47 @@ afterelse:	{
 
  
 write_st:T_WRITE '(' T_INTEGER_NUM ')'	{
-		fprintf(out, "\tpush\t%s\n", getstrarg($3));
-		fprintf(out, "\tpush\t$param1\n");
+		fprintf(out, "\tpushl\t%s\n", getstrarg($3));
+		fprintf(out, "\tpushl\t$param1\n");
 		fprintf(out, "\tcall\tprintf\n");
-		fprintf(out, "\tadd\t$8, %%esp\n");
+		fprintf(out, "\taddl\t$8, %%esp\n");
 
 		/* makequad(TAC_PRI, $3, -1, -1); */}
 	|T_WRITE '(' T_VARIABLE ')'	{ 
-		fprintf(out, "\tpush\t%s\n", $3.argument.symbol);
-		fprintf(out, "\tpush\t$param1\n");
+		fprintf(out, "\tpushl\t%s\n", $3.argument.symbol);
+		fprintf(out, "\tpushl\t$param1\n");
 		fprintf(out, "\tcall\tprintf\n");
-		fprintf(out, "\tadd\t$8, %%esp\n");
+		fprintf(out, "\taddl\t$8, %%esp\n");
 	
 		/*makequad(TAC_PRI, $3, -1, -1); */}
 	|T_WRITE '(' T_STRING ')'	{ 
-		fprintf(out, "\tpush\t%s\n", $3.argument.symbol);
-		fprintf(out, "\tpush\t$param3\n");
+		fprintf(out, "\tpushl\t%s\n", $3.argument.symbol);
+		fprintf(out, "\tpushl\t$param3\n");
 		fprintf(out, "\tcall\tprintf\n");
-		fprintf(out, "\tadd\t$8, %%esp\n");
+		fprintf(out, "\taddl\t$8, %%esp\n");
 	
 		/*makequad(TAC_PRI, $3, -1, -1); */}
 	;
 		
 writeln_st:T_WRITELN '(' T_INTEGER_NUM ')'	{
-		fprintf(out, "\tpush\t%s\n", getstrarg($3));
-		fprintf(out, "\tpush\t$param2\n");
+		fprintf(out, "\tpushl\t%s\n", getstrarg($3));
+		fprintf(out, "\tpushl\t$param2\n");
 		fprintf(out, "\tcall\tprintf\n");
-		fprintf(out, "\tadd\t$8, %%esp\n");
+		fprintf(out, "\taddl\t$8, %%esp\n");
 
 		/* makequad(TAC_PRI, $3, -1, -1); */}
 	|T_WRITELN '(' T_VARIABLE ')'	{ 
-		fprintf(out, "\tpush\t%s\n", $3.argument.symbol);
-		fprintf(out, "\tpush\t$param2\n");
+		fprintf(out, "\tpushl\t%s\n", $3.argument.symbol);
+		fprintf(out, "\tpushl\t$param2\n");
 		fprintf(out, "\tcall\tprintf\n");
-		fprintf(out, "\tadd\t$8, %%esp\n");
+		fprintf(out, "\taddl\t$8, %%esp\n");
 	
 		/*makequad(TAC_PRI, $3, -1, -1); */}
 	|T_WRITELN '(' T_STRING ')'	{ 
-		fprintf(out, "\tpush\t%s\n", $3.argument.symbol);
-		fprintf(out, "\tpush\t$param4\n");
+		fprintf(out, "\tpushl\t%s\n", $3.argument.symbol);
+		fprintf(out, "\tpushl\t$param4\n");
 		fprintf(out, "\tcall\tprintf\n");
-		fprintf(out, "\tadd\t$8, %%esp\n");
+		fprintf(out, "\taddl\t$8, %%esp\n");
 	
 		/*makequad(TAC_PRI, $3, -1, -1); */}
 	;
@@ -239,75 +221,75 @@ writeln_st:T_WRITELN '(' T_INTEGER_NUM ')'	{
 expression : T_INTEGER_NUM
 	| T_VARIABLE
 	| expression '+' expression	{ 
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($1));
-		fprintf(out, "\tadd\t%s, %%eax\n", getstrarg($3));	
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($1));
+		fprintf(out, "\taddl\t%s, %%eax\n", getstrarg($3));	
 		$$.argument.symbol=newtemp();
 		$$.type=0;
-		fprintf(out, "\tmov\t%%eax, %s\n", $$.argument.symbol);
+		fprintf(out, "\tmovl\t%%eax, %s\n", $$.argument.symbol);
 	
 		/*$$ = gettemp(); makequad(TAC_ADD, $1, $3, $$); */
 	}
 	| expression '-' expression { 
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($1));
-                fprintf(out, "\tsub\t%s, %%eax\n", getstrarg($3));
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($1));
+                fprintf(out, "\tsubl\t%s, %%eax\n", getstrarg($3));
                 $$.argument.symbol=newtemp();
 		$$.type=0;
-                fprintf(out, "\tmov\t%%eax, %s\n", $$.argument.symbol);
+                fprintf(out, "\tmovl\t%%eax, %s\n", $$.argument.symbol);
 	
 		/*$$ = gettemp(); makequad(TAC_SUB, $1, $3, $$);*/ }
 	| expression '*' expression	{ 
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($1));
-		fprintf(out, "\timul\t%s, %%eax\n", getstrarg($3));	
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($1));
+		fprintf(out, "\timull\t%s, %%eax\n", getstrarg($3));	
 		$$.argument.symbol=newtemp();
 		$$.type=0;
-		fprintf(out, "\tmov\t%%eax, %s\n", $$.argument.symbol);
+		fprintf(out, "\tmovl\t%%eax, %s\n", $$.argument.symbol);
 
 		/*$$ = gettemp(); makequad(TAC_MUL, $1, $3, $$); */}
 	| expression T_DIV expression	{ 
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($1));
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($1));
 		fprintf(out, "\tcdq\n");
-	        fprintf(out, "\tmov\t%s, %%ebx\n", getstrarg($3));
+	        fprintf(out, "\tmovl\t%s, %%ebx\n", getstrarg($3));
 	        fprintf(out, "\tidiv\t%%ebx\n");
 		$$.argument.symbol=newtemp();
 		$$.type=0;
-		fprintf(out, "\tmov\t%%eax, %s\n", $$.argument.symbol);
+		fprintf(out, "\tmovl\t%%eax, %s\n", $$.argument.symbol);
 	
 		/*$$ = gettemp(); makequad(TAC_DIV, $1, $3, $$); */}
 	| '('expression ')' 	{ $$ = $2; }
 	;
 
 comparison : expression '=' expression	{ 
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($3));
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($3));
 		fprintf(out, "\tcmp \t%s, %%eax\n", getstrarg($1));
 		fprintf(out, "\tjne \t%s\n", getlastlabel());
 	
 		/*$$ = gettoplabel(1); makequad(TAC_JNE, $1, $3, $$);*/}
 	| expression '>' expression	{		
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($3));
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($3));
 		fprintf(out, "\tcmp \t%s, %%eax\n", getstrarg($1));
 		fprintf(out, "\tjge \t%s\n", getlastlabel());
 	
 		/*$$ = gettoplabel(1); makequad(TAC_JGE, $1, $3, $$); */}
 	| expression '<' expression	{
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($3));
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($3));
 		fprintf(out, "\tcmp \t%s, %%eax\n", getstrarg($1));
 		fprintf(out, "\tjle \t%s\n", getlastlabel());
 	
 		/*$$ = gettoplabel(1); makequad(TAC_JLE, $1, $3, $$); */}
 	| expression T_GE expression	{
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($3));
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($3));
 		fprintf(out, "\tcmp \t%s, %%eax\n", getstrarg($1));
 		fprintf(out, "\tjg \t%s\n", getlastlabel());
 	
 		/* $$ = gettoplabel(1); makequad(TAC_JG, $1, $3, $$); */}
 	| expression T_LE expression	{ 
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($3));
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($3));
 		fprintf(out, "\tcmp \t%s, %%eax\n", getstrarg($1));
 		fprintf(out, "\tjl \t%s\n", getlastlabel());
 	
 		/*$$ = gettoplabel(1); makequad(TAC_JL, $1, $3, $$); */}
 	| expression T_NE expression	{ 
-		fprintf(out, "\tmov\t%s, %%eax\n", getstrarg($3));
+		fprintf(out, "\tmovl\t%s, %%eax\n", getstrarg($3));
 		fprintf(out, "\tcmp \t%s, %%eax\n", getstrarg($1));
 		fprintf(out, "\tje \t%s\n", getlastlabel());
 		
@@ -315,7 +297,6 @@ comparison : expression '=' expression	{
 	;
 
 %%
-//Check for the symbol
 char *symlook(char *s)
 {
 	int i;
@@ -334,24 +315,16 @@ char *symlook(char *s)
 		}
 		/* otherwise continue to next */
 	}
-	yyerror("Symbols exceeds");
+	yyerror("Too many symbols");
 	exit(1);        /* cannot continue */
 }
 
-//Main Function 
 int main(int argc, char *argv[])
 {
 	int i;
 	char *asm_file;
 	char *exe_file;
 	yydebug=0;
-        
-        printf("****************************************");
-        printf("\nWelcome to Simple Pascal Compiler" );
-        printf("\nType ./prj filename.p " );
-        printf("\nType ./filename to see result" );
-        printf("\n****************************************\n");
-
 	if ( argc > 1 ) 
 	{
 		if( freopen(argv[1],"r",stdin) == 0 ) 
@@ -366,23 +339,25 @@ int main(int argc, char *argv[])
         out = fopen( asm_file, "w" );
         if(out == NULL)
                 exit(1);
-
+	
+	//printf("%s\n",argv[1]);
+	
 	fprintf(out, "\t.text\n");
 	fprintf(out, "\t.global main\n");
 	fprintf(out, "main:\n");
-	fprintf(out, "\tpush\t%%ebp\n");
-	fprintf(out, "\tmov\t%%esp, %%ebp\n");
-	fprintf(out, "\tpush\t%%ebx\n");
-	fprintf(out, "\tpush\t%%esi\n");
-	fprintf(out, "\tpush\t%%edi\n");
+	fprintf(out, "\tpushl\t%%ebp\n");
+	fprintf(out, "\tmovl\t%%esp, %%ebp\n");
+	fprintf(out, "\tpushl\t%%ebx\n");
+	fprintf(out, "\tpushl\t%%esi\n");
+	fprintf(out, "\tpushl\t%%edi\n");
 	
 	yyparse();
 	
-	fprintf(out, "\tpop\t%%edi\n");
-	fprintf(out, "\tpop\t%%esi\n");
-	fprintf(out, "\tpop\t%%ebx\n");
-	fprintf(out, "\tmov\t%%ebp, %%esp\n");
-	fprintf(out, "\tpop\t%%ebp\n");
+	fprintf(out, "\tpopl\t%%edi\n");
+	fprintf(out, "\tpopl\t%%esi\n");
+	fprintf(out, "\tpopl\t%%ebx\n");
+	fprintf(out, "\tmovl\t%%ebp, %%esp\n");
+	fprintf(out, "\tpopl\t%%ebp\n");
 	fprintf(out, "\tret\t$0\n");
 	fprintf(out, "\n\t.data\n");
 	fprintf(out, "param1:\t.asciz \"%s\"\n","%d");
@@ -401,7 +376,7 @@ int main(int argc, char *argv[])
 			char tempvar[10];
 			if ((snprintf(tempvar, 10, "tmpstr%d", i)) == -1)
 			{
-				perror("The temporary variable name was"
+				perror("The name of an temporary variable was"
 					" truncated in fuction newtemp");
 				exit(-1);
 			}
@@ -420,32 +395,35 @@ int main(int argc, char *argv[])
 	
 	if(error_num != 0)
 	{
-		printf("Program has minor errors!\n");
+		printf("Program has some erros!\n");
 		return 0;
 	}
 
 	return 0;
 }
 
-//Function for error
 void yyerror(char *s)
 {
 	fprintf(stderr, "%s\n", s);
 }
 
-//Function for new temporary variable.
+/*yywrap()
+{
+	return(1);
+}*/
+
 char *newtemp(void)
 {
 	char tempvar[6];
 	if ((snprintf(tempvar, 6, "_T%d", varnumber++)) == -1)
 	{
-		perror("The temporary variable name was truncated in fuction newtemp");
+		perror("The name of an temporary variable was truncated in fuction newtemp");
 		exit(-1);
 	}
-	//Temporary storage in symbol
+	/* Temporary variables have to be inserted into the symbol table */
 	return symlook(tempvar);
 }
-//Function for addition
+
 char *addstr(char *s)
 {
 	char tempvar[10];
@@ -454,24 +432,27 @@ char *addstr(char *s)
 		perror("The name of an temporary variable was truncated in fuction newtemp");
 		exit(-1);
 	}
+	//strncpy(strings[strnumber-1], s+1, strlen(s)-2);
 	strings[strnumber-1] = (char*)strdup(s);
 	strings[strnumber-1][0]='"';
 	strings[strnumber-1][strlen(s)-1]='"';
 	return tempvar;
 }
-//Function for new label
+
 char *newlabel(void)
 {
 	char templabel[6];
 	if ((snprintf(templabel, 6, "_L%d", labelnumber++)) == -1)
 	{
-		perror("The labels name was truncated in fuction newlabel");
+		perror("The name of an labels was truncated in fuction newlabel");
 		exit(-1);
 	}
+	/*labeltable[lablenumber-1] = (char *)strdup(templabel);
+	return (char *)labeltable[lablenumber-1];*/
 	lastlabel = (char *)strdup(templabel);
 	return (char *)lastlabel;
 }
-//Function to fetch last label
+
 char *getlastlabel(void)
 {
 	if(addlab>1)
@@ -484,17 +465,21 @@ char *getlastlabel(void)
 	}
 }
 
-//Function to get arguments.
+/*char* gettoplabel(void)
+{
+	return (char *)labeltable[lablenumber-1];
+}*/
+
 char *getstrarg(argumentnode arg)
 {
 	char *string;
 	if(arg.type)
 	{//it is a number
 		string = (char *)calloc(12, sizeof(char));
-		// $, an integer and '\0' should fit in 12 characters
+		/* $, an integer and '\0' should fit in 12 characters, but testing anyway */
 		if ((snprintf(string, 12, "$%d", arg.argument.number)) == -1)
 		{
-			perror("The integer value was truncated in fuction getstrarg");
+			perror("The value of an integer was truncated in fuction getstrarg");
 			exit(-1);
 		}
 		return string;
@@ -502,5 +487,3 @@ char *getstrarg(argumentnode arg)
 	else
 		return arg.argument.symbol;
 }
-// This is the end of the lexer part of the code.
-// Comments and feedback at kalwar@gmail.com
